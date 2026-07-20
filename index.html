@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AK — ShadowCode</title>
+
+<!--
+  ============================================================
+  HOW TO ADD A NEW PROJECT
+  ============================================================
+  Find the `projects` array in the <script> block below.
+  Add a new object:
+  {
+    title: "Project Name",
+    tag: "short category label",
+    description: "One or two sentences about what it does.",
+    stack: ["Python", "PyTorch"],
+    link: "https://github.com/anotherkingAk/project-repo",
+    linkLabel: "View on GitHub"
+  }
+  It appears automatically as a new card — no layout edits needed.
+
+  ============================================================
+  HOW TO ADD A TRANSPARENCY / "WHERE FUNDS GO" ENTRY
+  ============================================================
+  Find the `impactLog` array in the same <script> block.
+  Add a new object each time you receive and use support:
+  {
+    date: "Jul 2026",
+    support: "What was received, e.g. 'GitHub Sponsors — monthly'",
+    used_for: "Exactly what it funded, e.g. 'GPU hours for Fade experiments'"
+  }
+  It appears automatically as a new row in the Transparency section.
+  ============================================================
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #EDEBE4;
+    --paper-raised: #E2DFD6;
+    --ink: #151412;
+    --ink-dim: #57544D;
+    --ash: #8A867B;
+    --rule: rgba(21, 20, 18, 0.14);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  ::selection { background: var(--ink); color: var(--paper); }
+  a { color: inherit; text-decoration: none; }
+
+  .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 5vw;
+    background: rgba(237, 235, 228, 0.88);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .nav-mark {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.02em;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+  }
+
+  .nav-links a { color: var(--ink-dim); transition: color 0.2s; }
+  .nav-links a:hover { color: var(--ink); }
+
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 640px) { .nav-links { display: none; } }
+
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 5vw;
+  }
+
+  #noise-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.16;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+
+  .hero-inner { position: relative; z-index: 2; max-width: 900px; }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .eyebrow .dot {
+    width: 6px; height: 6px;
+    background: var(--ink);
+    border-radius: 50%;
+  }
+
+  .hero h1 {
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: clamp(5rem, 22vw, 15rem);
+    line-height: 0.85;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    -webkit-mask-image: linear-gradient(100deg, #000 55%, transparent 92%);
+    mask-image: linear-gradient(100deg, #000 55%, transparent 92%);
+  }
+
+  .hero .tagline {
+    margin-top: 2rem;
+    max-width: 560px;
+    font-size: 1.1rem;
+    color: var(--ink-dim);
+  }
+
+  .hero .tagline strong { color: var(--ink); font-weight: 600; }
+
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    padding: 0.9rem 1.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1.5px solid var(--ink);
+  }
+
+  .btn-primary { background: var(--ink); color: var(--paper); }
+  .btn-primary:hover { background: transparent; color: var(--ink); }
+
+  .btn-ghost { background: transparent; color: var(--ink); }
+  .btn-ghost:hover { background: var(--ink); color: var(--paper); }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 5vw;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ash);
+    letter-spacing: 0.08em;
+  }
+
+  section { padding: 8rem 5vw; position: relative; }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 4rem;
+    gap: 2rem;
+    flex-wrap: wrap;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 1.5rem;
+  }
+
+  .section-head h2 {
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    letter-spacing: 0.01em;
+  }
+
+  .section-head p { color: var(--ash); max-width: 320px; font-size: 0.95rem; }
+
+  .about-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 4rem; }
+  @media (max-width: 800px) { .about-grid { grid-template-columns: 1fr; } }
+
+  .about-text p {
+    font-size: 1.1rem;
+    color: var(--ink-dim);
+    margin-bottom: 1.4rem;
+    max-width: 60ch;
+  }
+  .about-text strong { color: var(--ink); font-weight: 600; }
+
+  .stat-block { border-left: 3px solid var(--ink); padding-left: 1.2rem; margin-bottom: 1.8rem; }
+  .stat-block .num { font-family: 'Anton', sans-serif; font-size: 1.7rem; }
+  .stat-block .desc {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ash);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+  }
+
+  #projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5px;
+    background: var(--rule);
+    border: 1.5px solid var(--ink);
+  }
+
+  .project-card {
+    background: var(--paper);
+    padding: 2.5rem 2rem;
+    transition: background 0.25s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .project-card:hover { background: var(--paper-raised); }
+  .project-card .label { margin-bottom: 1rem; }
+  .project-card h3 { font-family: 'Anton', sans-serif; font-size: 1.7rem; margin-bottom: 0.9rem; font-weight: 400; }
+  .project-card p { color: var(--ink-dim); font-size: 0.95rem; margin-bottom: 1.5rem; flex-grow: 1; }
+
+  .project-image {
+    width: 100%;
+    height: auto;
+    margin-bottom: 1.5rem;
+    border: 1.5px solid var(--ink);
+  }
+
+  .stack-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .stack-tags span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--ink-dim);
+    border: 1px solid var(--ink-dim);
+    padding: 0.2rem 0.55rem;
+  }
+
+  .project-link {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: fit-content;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .project-link .arrow { transition: transform 0.2s ease; }
+  .project-card:hover .project-link .arrow { transform: translateX(4px); }
+
+  .impact-table { border-top: 1.5px solid var(--ink); }
+  .impact-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+  }
+  @media (max-width: 700px) { .impact-row { grid-template-columns: 1fr; gap: 0.4rem; } }
+
+  .impact-row .date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ash);
+    padding-top: 0.15rem;
+  }
+  .impact-row .support { font-weight: 600; font-size: 1rem; }
+  .impact-row .used-for { color: var(--ink-dim); font-size: 0.95rem; }
+  .impact-row .used-for::before {
+    content: "→ used for: ";
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ash);
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+
+  .impact-empty {
+    padding: 2.5rem 0;
+    color: var(--ash);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+  }
+
+  .sponsor-section {
+    text-align: center;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .sponsor-section h2 {
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    max-width: 700px;
+    margin: 0 auto 1.2rem;
+  }
+  .sponsor-section p { color: #C9C6BC; max-width: 520px; margin: 0 auto 2.5rem; }
+
+  .sponsor-btn {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    padding: 1rem 2.2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    border: 1.5px solid var(--paper);
+    transition: all 0.2s ease;
+  }
+  .sponsor-btn:hover { background: transparent; color: var(--paper); }
+
+  footer {
+    padding: 3rem 5vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ash);
+  }
+  footer .socials { display: flex; gap: 1.5rem; }
+  footer .socials a { color: var(--ink-dim); transition: color 0.2s; }
+  footer .socials a:hover { color: var(--ink); }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-mark">AK</div>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#projects">Projects</a>
+    <a href="#transparency">Transparency</a>
+    <a href="#sponsor">Sponsor</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <canvas id="noise-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="eyebrow">
+      <span class="dot"></span>
+      <span class="label">Andhra Pradesh, India — Working from home</span>
+    </div>
+    <h1>AK</h1>
+    <p class="tagline">
+      Founder of <strong>ShadowCode</strong>. I build tools that solve real
+      problems — without waiting for a big budget or a big team to start.
+    </p>
+    <div class="hero-cta">
+      <a href="#projects" class="btn btn-primary">View Projects →</a>
+      <a href="https://github.com/anotherkingAk" target="_blank" class="btn btn-ghost">GitHub ↗</a>
+    </div>
+  </div>
+  <div class="scroll-hint">SCROLL — 001</div>
+</section>
+
+<section id="about">
+  <div class="section-head">
+    <h2>About</h2>
+    <p>Building ShadowCode from the ground up, one real problem at a time.</p>
+  </div>
+  <div class="about-grid">
+    <div class="about-text">
+      <p>
+        I go by <strong>AK</strong>. I started ShadowCode on a simple belief:
+        the best tools don't come from the biggest budgets, they come from
+        people who refuse to stop building even when resources are scarce.
+      </p>
+      <p>
+        Right now that means working solo, from home, in Andhra Pradesh —
+        designing systems and architectures I believe in, and sharing the
+        work openly rather than waiting for permission to start.
+      </p>
+    </div>
+    <div class="about-stats">
+      <div class="stat-block">
+        <div class="num">ShadowCode</div>
+        <div class="desc">Founder &amp; builder</div>
+      </div>
+      <div class="stat-block">
+        <div class="num">Open Source</div>
+        <div class="desc">Everything shipped, shared</div>
+      </div>
+      <div class="stat-block">
+        <div class="num">India</div>
+        <div class="desc">Andhra Pradesh</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="section-head">
+    <h2>Projects</h2>
+    <p>Real, working code — architecture and pipelines, built in the open.</p>
+  </div>
+  <div id="projects-grid"></div>
+</section>
+
+<section id="transparency">
+  <div class="section-head">
+    <h2>Transparency</h2>
+    <p>If you support this work, you deserve to know exactly where it goes. Updated as it happens.</p>
+  </div>
+  <div class="impact-table" id="impact-log"></div>
+</section>
+
+<section id="sponsor" class="sponsor-section">
+  <h2>Support the next thing I build.</h2>
+  <p>Every project here is built without a funded team behind it. If this work is useful to you, sponsoring keeps it going — and you'll see exactly how it's used above.</p>
+  <a href="https://github.com/sponsors/anotherkingAk" target="_blank" class="sponsor-btn">
+    ♥ Sponsor on GitHub
+  </a>
+</section>
+
+<footer>
+  <div>© 2026 ShadowCode — AK</div>
+  <div class="socials">
+    <a href="https://github.com/anotherkingAk" target="_blank">GitHub</a>
+    <a href="https://github.com/sponsors/anotherkingAk" target="_blank">Sponsor</a>
+  </div>
+</footer>
+
+<script>
+  const projects = [
+    {
+      title: "Fade",
+      tag: "AI / Architecture",
+      description: "A 3.1T total-parameter Mixture-of-Experts architecture for code generation — RMSNorm, RoPE, GQA, and fill-in-the-middle training, fully open source.",
+      stack: ["PyTorch", "Python", "MoE"],
+      link: "https://github.com/anotherkingAk/Fade",
+      linkLabel: "View repository",
+      image: "assets/fade-banner.png"
+    }
+  ];
+
+  const grid = document.getElementById('projects-grid');
+  projects.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    card.innerHTML = `
+      ${p.image ? `<img src="${p.image}" alt="${p.title}" class="project-image">` : ''}
+      <span class="label">${p.tag}</span>
+      <h3>${p.title}</h3>
+      <p>${p.description}</p>
+      <div class="stack-tags">${p.stack.map(s => `<span>${s}</span>`).join('')}</div>
+      <a class="project-link" href="${p.link}" target="_blank">
+        ${p.linkLabel} <span class="arrow">→</span>
+      </a>
+    `;
+    grid.appendChild(card);
+  });
+
+  const impactLog = [
+    // Example — delete this and add real entries as they happen:
+    // { date: "Jul 2026", support: "GitHub Sponsors — one-time", used_for: "Domain + hosting for this site" },
+  ];
+
+  const impactContainer = document.getElementById('impact-log');
+  if (impactLog.length === 0) {
+    impactContainer.innerHTML = `<div class="impact-empty">No entries yet — this log updates as support comes in and gets put to use.</div>`;
+  } else {
+    impactLog.forEach(entry => {
+      const row = document.createElement('div');
+      row.className = 'impact-row';
+      row.innerHTML = `
+        <div class="date">${entry.date}</div>
+        <div class="support">${entry.support}</div>
+        <div class="used-for">${entry.used_for}</div>
+      `;
+      impactContainer.appendChild(row);
+    });
+  }
+
+  const canvas = document.getElementById('noise-canvas');
+  const ctx = canvas.getContext('2d');
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const imageData = ctx.createImageData(canvas.width, canvas.height);
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      const v = 180 + Math.random() * 75;
+      imageData.data[i] = v;
+      imageData.data[i + 1] = v;
+      imageData.data[i + 2] = v;
+      imageData.data[i + 3] = 255;
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+</script>
+
+</body>
+</html>
